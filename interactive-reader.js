@@ -6,13 +6,13 @@ class InteractiveReader extends HTMLElement {
 
     async connectedCallback() {
         try {
-            // Fetch the external template file.
-            // Ensure the path to 'reader-template.html' is correct relative to this JS file.
-            let response = await fetch('/reader-template.html');
-            if (!response.ok) {
-                response = await fetch('https://blog.teacherjake.com/apps/scripts/reader-template.html');
-                // throw new Error(`Failed to fetch template: ${response.statusText}`);
-            }
+            // Construct a URL to the template relative to the script's location.
+            // This makes the component more portable, as it doesn't rely on
+            // absolute paths or hardcoded domains.
+            const templateUrl = new URL('reader-template.html', import.meta.url);
+            const response = await fetch(templateUrl);
+            if (!response.ok) throw new Error(`Failed to fetch template: ${response.statusText}`);
+
             const templateString = await response.text();
             const template = document.createElement('template');
             template.innerHTML = templateString;
