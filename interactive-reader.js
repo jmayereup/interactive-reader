@@ -6,9 +6,6 @@ class InteractiveReader extends HTMLElement {
 
     async connectedCallback() {
         try {
-            // Construct a URL to the template relative to the script's location.
-            // This makes the component more portable, as it doesn't rely on
-            // absolute paths or hardcoded domains.
             const templateUrl = new URL('reader-template.html', import.meta.url);
             const response = await fetch(templateUrl);
             if (!response.ok) throw new Error(`Failed to fetch template: ${response.statusText}`);
@@ -56,6 +53,8 @@ class InteractiveReader extends HTMLElement {
         let originalTexts = [];
         let wordSpansForHighlighting = [];
         let lastHighlightedWord = null;
+        let audioUrl = null;
+        let audioEl = null;
 
         const synth = window.speechSynthesis;
         let voices = [];
@@ -334,6 +333,39 @@ class InteractiveReader extends HTMLElement {
 
 
         function handleListen(rate = 1.0) {
+            // If audioUrl is present, use audio element for playback
+            if (audioUrl) {
+                if (!audioEl) {
+                    audioEl = document.createElement('audio');
+                    audioEl.src = audioUrl;
+                    audioEl.preload = 'auto';
+                    audioEl.style.display = 'none';
+                    this.shadowRoot.appendChild(audioEl);
+                }
+                if (!audioEl.paused && !audioEl.ended) {
+                    audioEl.pause();
+                    audioEl.currentTime = 0;
+                    listenIconPlay.classList.remove('hidden');
+                    listenIconStop.classList.add('hidden');
+                    pauseBtn.classList.remove('active');
+                    isPaused = false;
+                    return;
+                }
+                listenIconPlay.classList.add('hidden');
+                listenIconStop.classList.remove('hidden');
+                pauseBtn.classList.remove('active');
+                isPaused = false;
+                audioEl.currentTime = 0;
+                audioEl.play();
+                audioEl.onended = () => {
+                    listenIconPlay.classList.remove('hidden');
+                    listenIconStop.classList.add('hidden');
+                    pauseBtn.classList.remove('active');
+                    isPaused = false;
+                };
+                return;
+            }
+            // Fallback to TTS
             if (synth.speaking || synth.paused) {
                 synth.cancel();
                 listenIconPlay.classList.remove('hidden');
@@ -367,10 +399,22 @@ class InteractiveReader extends HTMLElement {
             speak(fullText, onBoundary, onEnd, rate);
         }
 
-        listenBtn.addEventListener('click', () => handleListen(1.0));
+        listenBtn.addEventListener('click', () => handleListen.call(this, 1.0));
 
         // Pause button logic
         pauseBtn.addEventListener('click', () => {
+            if (audioUrl && audioEl) {
+                if (audioEl.paused) {
+                    audioEl.play();
+                    pauseBtn.classList.remove('active');
+                    isPaused = false;
+                } else {
+                    audioEl.pause();
+                    pauseBtn.classList.add('active');
+                    isPaused = true;
+                }
+                return;
+            }
             if (!synth.speaking && !synth.paused) return;
             if (!isPaused) {
                 synth.pause();
@@ -384,7 +428,7 @@ class InteractiveReader extends HTMLElement {
         });
 
         // Slow playback button logic
-        slowBtn.addEventListener('click', () => handleListen(0.6));
+        slowBtn.addEventListener('click', () => handleListen.call(this, 0.6));
 
         function showActivityView(title) {
             activityTitle.textContent = title;
@@ -546,7 +590,7 @@ class InteractiveReader extends HTMLElement {
             }
 
             mainTitle.textContent = parts[0];
-            
+
             // Parse word bank
             try {
                 const pairs = parts[2].split(',').map(p => p.split(':').map(s => s.trim()));
@@ -557,6 +601,15 @@ class InteractiveReader extends HTMLElement {
 
             // Parse text content
             originalTexts = parts[1].split('\n').filter(p => p.trim() !== '');
+
+            // Parse audio section if present
+            audioUrl = null;
+            if (parts.length > 3 && parts[3].startsWith('audio')) {
+                const audioMatch = parts[3].match(/audio-src\s*=\s*([^\s]+)/);
+                if (audioMatch) {
+                    audioUrl = audioMatch[1].trim();
+                }
+            }
 
             renderReadingPane();
             renderWordList();
