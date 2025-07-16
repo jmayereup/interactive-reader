@@ -23,18 +23,17 @@
     @media (min-width: 1024px) { .main-content { grid-column: span 2 / span 2; } }
     .card { background-color: var(--bg-color); padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
     .sidebar { flex-direction: column; }
-    .control-btn { display: flex; align-items: center; justify-content: center; background-color: #e5e7eb; border: none; cursor: pointer; width: 50px; height: 50px; border-radius: 9999px; transition: background-color 0.2s; }
+    .control-btn { display: flex; align-items: center; justify-content: center; background-color: #e5e7eb; border: none; cursor: pointer; width: 2.5rem; height: 2.5rem; border-radius: 9999px; transition: background-color 0.2s; }
     .control-btn:hover { background-color: #d1d5db; }
     .control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .control-btn svg { width: 30px; height: 30px; }
+    .control-btn svg { width: 1.5rem; height: 1.5rem; }
     .hidden { display: none !important; }
     .prose p { line-height: 150%; font-size: 100%; margin-bottom: 1rem; }
     .clickable-word { cursor: pointer; transition: background-color 0.2s; border-radius: 4px; padding: 1px 2px; margin: -1px -2px; }
     .clickable-word:hover { background-color: #dbeafe; }
     .word-in-list { background-color: #36e673; }
     .speaking-highlight { background-color: var(--highlight-bg); }
-    .question-section { margin-top: 2rem; }
-    .section-title { font-size: 150%; font-weight: 600; color: var(--text-color); margin-bottom: 1rem; }
+    .section-title { font-size: 1.5rem; font-weight: 600; color: var(--text-color); margin-bottom: 1rem; }
     .word-list { max-height: 48vh; overflow-y: auto; margin-bottom: 1.5rem; }
     .word-list-item { background-color: #f9fafb; margin-bottom: .2rem; padding: 0.25rem 0.5rem; line-height: 95%; font-size: 90%; border-radius: 0.375rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background-color 0.2s; }
     .word-list-item:hover { background-color: #f3f4f6; }
@@ -73,7 +72,6 @@
         #translation-popup p:last-child { font-size: 90%; color: var(--primary-color); margin-top: 0.05rem; font-weight: 600; line-height: 1.1; }
         #translation-popup button { margin-top: 0.1rem; }
     #close-popup { position: absolute; top: 0.5rem; right: 0.75rem; background: none; border: none; font-size: 1.5rem; font-weight: 700; color: #9ca3af; cursor: pointer; }
-    .question-answer { padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; margin-bottom: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
     #close-popup:hover { color: #1f2937; }
     #activity-modal { position: fixed; inset: 0; background-color: #f8fafc; z-index: 50; padding: 2rem; }
     @media (max-width: 640px) { #activity-modal { padding: 1rem; } }

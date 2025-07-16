@@ -53,8 +53,6 @@ class InteractiveReader extends HTMLElement {
         let originalTexts = [];
         let wordSpansForHighlighting = [];
         let lastHighlightedWord = null;
-        let audioUrl = null;
-        let audioEl = null;
 
         const synth = window.speechSynthesis;
         let voices = [];
@@ -195,38 +193,6 @@ class InteractiveReader extends HTMLElement {
             });
         }
 
-        function renderQuestions(questions) {
-            if (!questions || questions.length === 0) return;
-            const questionsDiv = document.createElement('div');
-            questionsDiv.className = 'question-section';
-            questionsDiv.innerHTML = '<h2 class="section-title">Comprehension Questions</h2>';
-
-            questions.forEach((q, index) => {
-                const questionDiv = document.createElement('div');
-                questionDiv.innerHTML = `<p style="font-weight: 600;">${index + 1}. ${q.question}</p>`;
-
-                q.answers.forEach(answer => {
-                    const answerDiv = document.createElement('div');
-                    answerDiv.className = 'question-answer';
-                    answerDiv.textContent = answer.text;
-                    answerDiv.dataset.correct = answer.correct;
-                    answerDiv.addEventListener('click', () => {
-                        if (answerDiv.dataset.correct === 'true') {
-                            answerDiv.style.backgroundColor = '#dcfce7';
-                        } else {
-                            answerDiv.style.backgroundColor = '#fee2e2';
-                        }
-                    });
-                    questionDiv.appendChild(answerDiv);
-                });
-
-                questionsDiv.appendChild(questionDiv);
-            });
-
-            readingPane.appendChild(questionsDiv);
-        }
-
-
         readingPane.addEventListener('click', (e) => {
             const target = e.target;
             if (target.classList.contains('clickable-word')) {
@@ -365,39 +331,6 @@ class InteractiveReader extends HTMLElement {
 
 
         function handleListen(rate = 1.0) {
-            // If audioUrl is present, use audio element for playback
-            if (audioUrl) {
-                if (!audioEl) {
-                    audioEl = document.createElement('audio');
-                    audioEl.src = audioUrl;
-                    audioEl.preload = 'auto';
-                    audioEl.style.display = 'none';
-                    this.shadowRoot.appendChild(audioEl);
-                }
-                if (!audioEl.paused && !audioEl.ended) {
-                    audioEl.pause();
-                    audioEl.currentTime = 0;
-                    listenIconPlay.classList.remove('hidden');
-                    listenIconStop.classList.add('hidden');
-                    pauseBtn.classList.remove('active');
-                    isPaused = false;
-                    return;
-                }
-                listenIconPlay.classList.add('hidden');
-                listenIconStop.classList.remove('hidden');
-                pauseBtn.classList.remove('active');
-                isPaused = false;
-                audioEl.currentTime = 0;
-                audioEl.play();
-                audioEl.onended = () => {
-                    listenIconPlay.classList.remove('hidden');
-                    listenIconStop.classList.add('hidden');
-                    pauseBtn.classList.remove('active');
-                    isPaused = false;
-                };
-                return;
-            }
-            // Fallback to TTS
             if (synth.speaking || synth.paused) {
                 synth.cancel();
                 listenIconPlay.classList.remove('hidden');
@@ -431,22 +364,10 @@ class InteractiveReader extends HTMLElement {
             speak(fullText, onBoundary, onEnd, rate);
         }
 
-        listenBtn.addEventListener('click', () => handleListen.call(this, 1.0));
+        listenBtn.addEventListener('click', () => handleListen(1.0));
 
         // Pause button logic
         pauseBtn.addEventListener('click', () => {
-            if (audioUrl && audioEl) {
-                if (audioEl.paused) {
-                    audioEl.play();
-                    pauseBtn.classList.remove('active');
-                    isPaused = false;
-                } else {
-                    audioEl.pause();
-                    pauseBtn.classList.add('active');
-                    isPaused = true;
-                }
-                return;
-            }
             if (!synth.speaking && !synth.paused) return;
             if (!isPaused) {
                 synth.pause();
@@ -460,40 +381,7 @@ class InteractiveReader extends HTMLElement {
         });
 
         // Slow playback button logic
-        slowBtn.addEventListener('click', () => {
-            // Always use TTS for slow mode, even if audio file is present
-            if (synth.speaking || synth.paused) {
-                synth.cancel();
-                listenIconPlay.classList.remove('hidden');
-                listenIconStop.classList.add('hidden');
-                pauseBtn.classList.remove('active');
-                isPaused = false;
-                return;
-            }
-            const fullText = originalTexts.join('\n');
-            const onBoundary = (event) => {
-                if (event.name !== 'word') return;
-                if (lastHighlightedWord) lastHighlightedWord.classList.remove('speaking-highlight');
-                const word = wordSpansForHighlighting.find(span => event.charIndex >= span.start && event.charIndex < span.end);
-                if (word) {
-                    word.element.classList.add('speaking-highlight');
-                    lastHighlightedWord = word.element;
-                }
-            };
-            const onEnd = () => {
-                if (lastHighlightedWord) lastHighlightedWord.classList.remove('speaking-highlight');
-                lastHighlightedWord = null;
-                listenIconPlay.classList.remove('hidden');
-                listenIconStop.classList.add('hidden');
-                pauseBtn.classList.remove('active');
-                isPaused = false;
-            };
-            listenIconPlay.classList.add('hidden');
-            listenIconStop.classList.remove('hidden');
-            pauseBtn.classList.remove('active');
-            isPaused = false;
-            speak(fullText, onBoundary, onEnd, 0.6);
-        });
+        slowBtn.addEventListener('click', () => handleListen(0.6));
 
         function showActivityView(title) {
             activityTitle.textContent = title;
@@ -642,35 +530,6 @@ class InteractiveReader extends HTMLElement {
                 }
             }
         }
-        function parseQuestions(questionsText) {
-            if (!questionsText) return [];
-            try {
-                const questions = [];
-                const lines = questionsText.split('\n').map(line => line.trim()).filter(line => line !== '');
-                let currentQuestion = null;
-                for (const line of lines) {
-                    if (line.startsWith('Q:')) {
-                        if (currentQuestion) questions.push(currentQuestion);
-                        currentQuestion = { question: line.substring(2).trim(), answers: [] };
-                    } else if (line.startsWith('A:')) {
-                        if (currentQuestion) {
-                            const parts = line.substring(2).split('[');
-                            const answerText = parts[0].trim();
-                            const isCorrect = parts.length > 1 && parts[1].trim() === 'correct]';
-                            currentQuestion.answers.push({ text: answerText, correct: isCorrect });
-                        }
-                    }
-                }
-                if (currentQuestion) questions.push(currentQuestion);
-                return questions;
-            } catch (error) {
-                console.error("Error parsing questions:", error);
-                return [];
-            }
-        }
-
-
-
         
         // --- Initial Load ---
         const init = () => {
@@ -684,7 +543,7 @@ class InteractiveReader extends HTMLElement {
             }
 
             mainTitle.textContent = parts[0];
-
+            
             // Parse word bank
             try {
                 const pairs = parts[2].split(',').map(p => p.split(':').map(s => s.trim()));
@@ -696,25 +555,7 @@ class InteractiveReader extends HTMLElement {
             // Parse text content
             originalTexts = parts[1].split('\n').filter(p => p.trim() !== '');
 
-            // Parse audio section if present
-            audioUrl = null;
-            if (parts.length > 3 && parts[3].startsWith('audio')) {
-                const audioMatch = parts[3].match(/audio-src\s*=\s*([^\s]+)/);
-                if (audioMatch) {
-                    audioUrl = audioMatch[1].trim();
-                }
-            }
-
-            let questions = [];
-            if (parts.length > 4 && parts[4].startsWith('questions')) {
-                const questionsText = parts[4].substring(9).trim();
-                questions = parseQuestions(questionsText);
-            }
-
-
-
             renderReadingPane();
-            renderQuestions(questions);
             renderWordList();
             populateVoiceList();
         };
