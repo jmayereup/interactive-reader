@@ -46,8 +46,13 @@ class InteractiveReader extends HTMLElement {
         const listenIconStop = qs('#listen-icon-stop');
         const pauseBtn = qs('#pause-btn');
         const slowBtn = qs('#slow-btn');
+        const themeToggleBtn = qs('#theme-toggle-btn');
+        const themeIconSun = qs('#theme-icon-sun');
+        const themeIconMoon = qs('#theme-icon-moon');
+
 
         const WORD_LIST_STORAGE_KEY = 'thai_reading_tool_word_list';
+        const THEME_STORAGE_KEY = 'thai_reading_tool_theme';
         
         let offlineDictionary = {};
         let originalTexts = [];
@@ -124,7 +129,7 @@ class InteractiveReader extends HTMLElement {
                     const div = document.createElement('div');
                     div.className = 'word-list-item';
                     div.dataset.english = wordData.english;
-                    div.innerHTML = `<div><p>${wordData.english}</p><p>${wordData.thai}</p></div><button data-english="${wordData.english}" class="remove-word-btn">&times;</button>`;
+                    div.innerHTML = `<div><p>${wordData.english}</p><p style="font-family: 'Sarabun', sans-serif;">${wordData.thai}</p></div><button data-english="${wordData.english}" class="remove-word-btn">&times;</button>`;
                     wordListContainer.appendChild(div);
                 });
             }
@@ -158,12 +163,12 @@ class InteractiveReader extends HTMLElement {
             wordCountSelector.classList.toggle('hidden', !activitiesEnabled);
             if (activitiesEnabled) {
                 wordCountSelect.innerHTML = '';
-                const options = [4, 8, 12].filter(n => n <= wordCount && n % 2 === 0);
+                const options = [4, 8, 12, 16].filter(n => n <= wordCount && n % 2 === 0);
                 options.forEach(opt => {
                     wordCountSelect.innerHTML += `<option value="${opt}">${opt} words</option>`;
                 });
                 const allCount = wordCount % 2 === 0 ? wordCount : wordCount -1;
-                if (allCount >= 4) {
+                if (allCount >= 4 && !options.includes(allCount)) {
                    wordCountSelect.innerHTML += `<option value="${allCount}">All (${allCount} words)</option>`;
                 }
             }
@@ -252,12 +257,14 @@ class InteractiveReader extends HTMLElement {
         function displayPopup(targetElement, englishWord, thaiWord, wordSpanEl = null) {
             const isInList = getWordList().some(item => item.english.toLowerCase() === englishWord.toLowerCase());
             popup.innerHTML = `<div id="popup-content">
+            <div class="spaced-header">
             <p>${englishWord}</p>
-            <input id="thai-word-input" type="text" value="${thaiWord}" style="font-family: 'Sarabun', sans-serif; width: 100%; margin-bottom: 0.5rem;" />
+            <button id="close-popup" class="remove-word-btn">&times;</button>
+            </div>
+            <input id="thai-word-input" type="text" value="${thaiWord}" />
             <button id="add-to-list-btn" class="button button-secondary">บันทึกคำ</button>
             <button id="remove-from-list-btn" class="button button-red"${isInList ? '' : ' style="display:none;"'}>ลบคำ</button>
             <button id="play-from-here-btn" class="button button-primary">ฟังจากที่นี่</button>
-            <button id="close-popup">&times;</button>
             </div>`;
             popup.classList.remove('hidden');
             positionPopup(targetElement);
@@ -280,12 +287,10 @@ class InteractiveReader extends HTMLElement {
         }
 
         function playFromHere(englishWord, wordSpanEl) {
-            // Find the wordSpanForHighlighting entry for the clicked span
             const spanEntry = wordSpansForHighlighting.find(span => span.element === wordSpanEl);
             if (!spanEntry) return;
             const charOffset = spanEntry.start;
 
-            // Reconstruct the text to speak from the clicked span onward
             let found = false;
             let textToSpeak = '';
             for (let p of readingPane.querySelectorAll('p')) {
@@ -300,23 +305,19 @@ class InteractiveReader extends HTMLElement {
                 if (found) textToSpeak += '\n';
             }
             if (textToSpeak.trim()) {
-                // Use the last used playback rate
                 const onBoundary = (event) => {
                     if (event.name !== 'word') return;
                     if (lastHighlightedWord) lastHighlightedWord.classList.remove('speaking-highlight');
                     const globalCharIndex = event.charIndex + charOffset;
-                    // Only highlight clickable-word spans (not spaces/punctuation)
                     let word = wordSpansForHighlighting.find(span =>
                         globalCharIndex >= span.start && globalCharIndex < span.end && span.element.classList.contains('clickable-word')
                     );
                     if (!word) {
-                        // If boundary lands on non-word, highlight the next clickable word span after the charIndex
                         word = wordSpansForHighlighting.find(span =>
                             span.start >= globalCharIndex && span.element.classList.contains('clickable-word')
                         );
                     }
                     if (!word) {
-                        // fallback: highlight the last clickable word
                         const clickable = [...wordSpansForHighlighting].reverse().find(span => span.element.classList.contains('clickable-word'));
                         if (clickable) word = clickable;
                     }
@@ -346,9 +347,7 @@ class InteractiveReader extends HTMLElement {
             const popupWidth = 200;
             const padding = 40;
             let left = rect.left;
-            // Center popup above word if possible
             left = rect.left + (rect.width / 2) - (popupWidth / 2);
-            // Clamp to viewport
             left = Math.max(padding, Math.min(left, window.innerWidth - popupWidth - padding));
             popup.style.left = `${left}px`;
             popup.style.top = `${rect.bottom + 10}px`;
@@ -365,7 +364,6 @@ class InteractiveReader extends HTMLElement {
 
 
         function handleListen(rate = 1.0) {
-            // If audioUrl is present, use audio element for playback
             if (audioUrl) {
                 if (!audioEl) {
                     audioEl = document.createElement('audio');
@@ -397,7 +395,6 @@ class InteractiveReader extends HTMLElement {
                 };
                 return;
             }
-            // Fallback to TTS
             if (synth.speaking || synth.paused) {
                 synth.cancel();
                 listenIconPlay.classList.remove('hidden');
@@ -433,7 +430,6 @@ class InteractiveReader extends HTMLElement {
 
         listenBtn.addEventListener('click', () => handleListen.call(this, 1.0));
 
-        // Pause button logic
         pauseBtn.addEventListener('click', () => {
             if (audioUrl && audioEl) {
                 if (audioEl.paused) {
@@ -459,9 +455,7 @@ class InteractiveReader extends HTMLElement {
             }
         });
 
-        // Slow playback button logic
         slowBtn.addEventListener('click', () => {
-            // Always use TTS for slow mode, even if audio file is present
             if (synth.speaking || synth.paused) {
                 synth.cancel();
                 listenIconPlay.classList.remove('hidden');
@@ -509,7 +503,7 @@ class InteractiveReader extends HTMLElement {
 
         closeActivityBtn.addEventListener('click', hideActivityView);
         quizBtn.addEventListener('click', () => { showActivityView('Multiple Choice Quiz'); generateQuiz(); });
-        matchingGameBtn.addEventListener('click', () => { showActivityView('Matching Game'); generateMatchingGame(); });
+        matchingGameBtn.addEventListener('click', () => { showActivityView('Memory Game'); generateMatchingGame(); });
         exportBtn.addEventListener('click', () => {
             const words = getWordList();
             if (words.length === 0) return;
@@ -532,32 +526,58 @@ class InteractiveReader extends HTMLElement {
             const allWords = getWordList();
             let words = wordsToUse ? [...wordsToUse].sort(() => 0.5 - Math.random()) : allWords.sort(() => 0.5 - Math.random()).slice(0, parseInt(wordCountSelect.value));
             let currentIndex = 0, score = 0;
+
             function showQuestion() {
                 if (currentIndex >= words.length) { showResults(); return; }
                 const correctWord = words[currentIndex];
                 let options = [correctWord, ...allWords.filter(w => w.english !== correctWord.english).sort(() => 0.5 - Math.random()).slice(0, 3)];
                 options.sort(() => 0.5 - Math.random());
-                activityContent.innerHTML = `<div style="text-align: center;"><p>Question ${currentIndex + 1} of ${words.length}</p><p style="font-size: 2.25rem; font-weight: 700; margin: 1.5rem 0;">${correctWord.english}</p><div id="quiz-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">${options.map(opt => `<button data-correct="${opt.english === correctWord.english}" class="quiz-option">${opt.thai}</button>`).join('')}</div><div id="quiz-feedback" style="margin-top: 1.5rem; height: 3rem;"></div></div>`;
+
+                activityContent.innerHTML = `
+                    <div class="quiz-container">
+                        <p style="color: var(--text-muted);">Question ${currentIndex + 1} of ${words.length}</p>
+                        <p class="quiz-question">${correctWord.english}</p>
+                        <div id="quiz-options" class="quiz-options-grid">
+                            ${options.map(opt => `<button data-correct="${opt.english === correctWord.english}" class="quiz-option">${opt.thai}</button>`).join('')}
+                        </div>
+                        <div id="quiz-feedback" class="quiz-feedback"></div>
+                    </div>`;
+
                 qs('#quiz-options').addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'BUTTON' || e.target.disabled) return;
-                    const selectedButton = e.target;
+                    const selectedButton = e.target.closest('.quiz-option');
+                    if (!selectedButton || selectedButton.disabled) return;
+
                     const isCorrect = selectedButton.dataset.correct === 'true';
                     qsa('.quiz-option').forEach(btn => {
                         btn.disabled = true;
                         if (btn.dataset.correct === 'true') btn.classList.add('correct');
                     });
-                    if (isCorrect) { score++; selectedButton.classList.add('correct'); } else { selectedButton.classList.add('incorrect'); }
+
+                    if (isCorrect) {
+                        score++;
+                        selectedButton.classList.add('correct');
+                    } else {
+                        selectedButton.classList.add('incorrect');
+                    }
+
                     const nextButton = document.createElement('button');
                     nextButton.textContent = 'Next →';
                     nextButton.className = 'button button-primary';
+                    nextButton.style.marginTop = '1rem';
                     nextButton.onclick = () => { currentIndex++; showQuestion(); };
                     qs('#quiz-feedback').appendChild(nextButton);
                 });
             }
+
             function showResults() {
-                 activityContent.innerHTML = `<div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><h3 style="font-size: 2.25rem; font-weight: 700;">Quiz Complete!</h3><p style="font-size: 1.5rem; margin-top: 1rem;">You scored ${score} out of ${words.length}</p><div id="replay-buttons" style="margin-top: 2rem; display: flex; gap: 1rem;"></div></div>`;
+                 activityContent.innerHTML = `
+                    <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                        <h3 style="font-size: 2.25rem; font-weight: 700;">Quiz Complete!</h3>
+                        <p style="font-size: 1.5rem; margin-top: 1rem; color: var(--text-muted);">You scored ${score} out of ${words.length}</p>
+                        <div id="replay-buttons" style="margin-top: 2rem; display: flex; gap: 1rem;"></div>
+                    </div>`;
                  const replayContainer = qs('#replay-buttons');
-                 if (allWords.length > words.length) {
+                 if (allWords.length > words.length && words.length > 0) {
                      replayContainer.innerHTML += `<button id="play-again-same" class="button button-primary">Play Again (Same Words)</button><button id="play-again-new" class="button button-secondary">Play Again (New Words)</button>`;
                      qs('#play-again-same').addEventListener('click', () => generateQuiz(words));
                      qs('#play-again-new').addEventListener('click', () => generateQuiz());
@@ -566,6 +586,7 @@ class InteractiveReader extends HTMLElement {
                      qs('#play-again').addEventListener('click', () => generateQuiz());
                  }
             }
+
             showQuestion();
         }
 
@@ -573,75 +594,88 @@ class InteractiveReader extends HTMLElement {
             const allWords = getWordList();
             let words = wordsToUse ? [...wordsToUse] : allWords.sort(() => 0.5 - Math.random()).slice(0, parseInt(wordCountSelect.value));
             
-            let englishWords = words.map(w => ({...w}));
-            let thaiWords = words.map(w => ({...w})).sort(() => 0.5 - Math.random());
-
-            activityContent.innerHTML = `<div id="match-container">
-                <div id="en-column" class="match-column"></div>
-                <div id="th-column" class="match-column"></div>
-            </div>`;
-            
-            const enCol = qs('#en-column');
-            const thCol = qs('#th-column');
-
-            englishWords.forEach(word => {
-                enCol.innerHTML += `<button class="match-item" data-id="${word.english}">${word.english}</button>`;
+            let cards = [];
+            words.forEach((word, index) => {
+                cards.push({ type: 'english', text: word.english, matchId: index });
+                cards.push({ type: 'thai', text: word.thai, matchId: index });
             });
-            thaiWords.forEach(word => {
-                thCol.innerHTML += `<button class="match-item" data-id="${word.english}" style="font-family: 'Sarabun', sans-serif;">${word.thai}</button>`;
+            cards.sort(() => 0.5 - Math.random());
+
+            activityContent.innerHTML = `<div id="memory-grid" class="memory-grid"></div>`;
+            const grid = qs('#memory-grid');
+
+            const cardFrontIcon = `<svg class="card-front-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.562L16.25 21.75l-.648-1.188a2.25 2.25 0 01-1.4-1.4l-1.188-.648 1.188-.648a2.25 2.25 0 011.4-1.4l.648-1.188.648 1.188a2.25 2.25 0 011.4 1.4l1.188.648-1.188.648a2.25 2.25 0 01-1.4 1.4z" /></svg>`;
+
+            cards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.classList.add('memory-card');
+                cardEl.dataset.matchId = card.matchId;
+                cardEl.innerHTML = `
+                    <div class="card-face card-front">${cardFrontIcon}</div>
+                    <div class="card-face card-back ${card.type === 'thai' ? 'thai' : ''}">${card.text}</div>
+                `;
+                grid.appendChild(cardEl);
             });
 
-            let selectedEn = null;
+            let flippedCards = [];
             let lockBoard = false;
-            let matchedCount = 0;
+            let matchedPairs = 0;
 
-            activityContent.addEventListener('click', (e) => {
-                if (lockBoard || !e.target.classList.contains('match-item') || e.target.classList.contains('matched')) return;
+            grid.addEventListener('click', e => {
+                const clickedCard = e.target.closest('.memory-card');
 
-                const clickedItem = e.target;
+                if (lockBoard || !clickedCard || clickedCard.classList.contains('flipped') || clickedCard.classList.contains('matched')) {
+                    return;
+                }
 
-                if (enCol.contains(clickedItem)) {
-                    if (selectedEn) selectedEn.classList.remove('selected');
-                    selectedEn = clickedItem;
-                    selectedEn.classList.add('selected');
-                } else if (thCol.contains(clickedItem) && selectedEn) {
+                clickedCard.classList.add('flipped');
+                flippedCards.push(clickedCard);
+
+                if (flippedCards.length === 2) {
                     lockBoard = true;
-                    if (selectedEn.dataset.id === clickedItem.dataset.id) {
-                        selectedEn.classList.add('matched');
-                        clickedItem.classList.add('matched');
-                        selectedEn.classList.remove('selected');
-                        selectedEn = null;
+                    const [card1, card2] = flippedCards;
+
+                    if (card1.dataset.matchId === card2.dataset.matchId) {
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        matchedPairs++;
+                        flippedCards = [];
                         lockBoard = false;
-                        matchedCount++;
-                        if (matchedCount === words.length) {
-                            showGameResults();
+
+                        if (matchedPairs === words.length) {
+                            setTimeout(showGameResults, 800);
                         }
                     } else {
-                        selectedEn.classList.add('incorrect');
-                        clickedItem.classList.add('incorrect');
+                        card1.classList.add('mismatched');
+                        card2.classList.add('mismatched');
                         setTimeout(() => {
-                            selectedEn.classList.remove('incorrect', 'selected');
-                            clickedItem.classList.remove('incorrect');
-                            selectedEn = null;
+                            card1.classList.remove('flipped', 'mismatched');
+                            card2.classList.remove('flipped', 'mismatched');
+                            flippedCards = [];
                             lockBoard = false;
-                        }, 800);
+                        }, 1200);
                     }
                 }
             });
 
             function showGameResults() {
-                activityContent.innerHTML = `<div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><h3 style="font-size: 2.25rem; font-weight: 700; color: var(--secondary-color);">You Win!</h3><div id="replay-buttons" style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;"></div></div>`;
+                activityContent.innerHTML = `
+                    <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                        <h3 style="font-size: 2.25rem; font-weight: 700; color: var(--secondary);">You Win!</h3>
+                        <div id="replay-buttons" style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;"></div>
+                    </div>`;
                 const replayContainer = qs('#replay-buttons');
-                if (allWords.length > words.length) {
+                 if (allWords.length > words.length && words.length > 0) {
                      replayContainer.innerHTML += `<button id="play-again-same" class="button button-primary">Play Again (Same Words)</button><button id="play-again-new" class="button button-secondary">Play Again (New Words)</button>`;
                      qs('#play-again-same').addEventListener('click', () => generateMatchingGame(words));
                      qs('#play-again-new').addEventListener('click', () => generateMatchingGame());
-                } else {
+                 } else {
                      replayContainer.innerHTML += `<button id="play-again" class="button button-primary">Play Again</button>`;
                      qs('#play-again').addEventListener('click', () => generateMatchingGame());
-                }
+                 }
             }
         }
+
         function parseQuestions(questionsText) {
             if (!questionsText) return [];
             try {
@@ -668,13 +702,26 @@ class InteractiveReader extends HTMLElement {
                 return [];
             }
         }
-
-
-
         
-        // --- Initial Load ---
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                this.classList.add('dark');
+                themeIconSun.classList.remove('hidden');
+                themeIconMoon.classList.add('hidden');
+            } else {
+                this.classList.remove('dark');
+                themeIconSun.classList.add('hidden');
+                themeIconMoon.classList.remove('hidden');
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = this.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+            applyTheme.call(this, newTheme);
+        });
+
         const init = () => {
-            // Parse content from innerHTML
             const rawContent = this.innerHTML;
             const parts = rawContent.split('---').map(p => p.trim());
             
@@ -685,7 +732,6 @@ class InteractiveReader extends HTMLElement {
 
             mainTitle.textContent = parts[0];
 
-            // Parse word bank
             try {
                 const pairs = parts[2].split(',').map(p => p.split(':').map(s => s.trim()));
                 offlineDictionary = Object.fromEntries(pairs);
@@ -693,10 +739,8 @@ class InteractiveReader extends HTMLElement {
                 console.error("Could not parse word bank.", e);
             }
 
-            // Parse text content
             originalTexts = parts[1].split('\n').filter(p => p.trim() !== '');
 
-            // Parse audio section if present
             audioUrl = null;
             if (parts.length > 3 && parts[3].startsWith('audio')) {
                 const audioMatch = parts[3].match(/audio-src\s*=\s*([^\s]+)/);
@@ -711,7 +755,8 @@ class InteractiveReader extends HTMLElement {
                 questions = parseQuestions(questionsText);
             }
 
-
+            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+            applyTheme.call(this, savedTheme);
 
             renderReadingPane();
             renderQuestions(questions);
