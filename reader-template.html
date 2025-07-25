@@ -93,13 +93,15 @@
         font-size: 100%;
         color: var(--text-color);
     }
-    .clickable-word {
-        cursor: pointer;
-        transition: background-color 0.2s, color 0.2s;
-        border-bottom: 1px dashed var(--secondary-light);
-        border-radius: 4px;
-        padding: 2px 1px;
-    }
+.clickable-word {
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 4px;
+    padding: 2px 1px;
+}
+.has-definition {
+    border-bottom: 1px dashed var(--secondary-light);
+}
     .clickable-word:hover {
         background-color: var(--secondary-hover-dark);
         color: white;
@@ -470,7 +472,7 @@
         
         <main>
             <div class="lg-col-span-2 card">
-                <div class="instructions text-center mb-6" style="color: var(--text-muted);">Click any highlighted word to hear it, see the translation, and add it to your list.</div>
+                <div class="instructions text-center mb-6" style="color: var(--text-muted);">Click any underlined word to hear it, see its translation, and add it to your list.</div>
                 <div id="reading-pane" class="prose max-h-70vh overflow-y-auto pr-2"></div>
             </div>
 

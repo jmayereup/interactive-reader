@@ -122,6 +122,14 @@ class InteractiveReader extends HTMLElement {
         function renderWordList() {
             const words = getWordList();
             wordListContainer.innerHTML = '';
+            
+            // Populate offlineDictionary with saved words
+            words.forEach(wordData => {
+                if (wordData.thai && wordData.thai.trim() !== '') {
+                    offlineDictionary[wordData.english.toLowerCase()] = wordData.thai;
+                }
+            });
+            
             if (words.length === 0) {
                 wordListContainer.appendChild(wordListPlaceholder.cloneNode(true));
             } else {
@@ -140,9 +148,15 @@ class InteractiveReader extends HTMLElement {
         function addWordToList(wordData) {
             const list = getWordList();
             if (!list.some(item => item.english.toLowerCase() === wordData.english.toLowerCase())) {
-            list.unshift(wordData); // Add new word at the beginning
-            saveWordList(list);
-            renderWordList();
+                list.unshift(wordData); // Add new word at the beginning
+                saveWordList(list);
+                renderWordList();
+                
+                // Add the definition to the offline dictionary and re-render reading pane
+                if (wordData.thai && wordData.thai.trim() !== '') {
+                    offlineDictionary[wordData.english.toLowerCase()] = wordData.thai;
+                    renderReadingPane(); // Re-render to apply has-definition class
+                }
             }
         }
 
@@ -151,6 +165,10 @@ class InteractiveReader extends HTMLElement {
             list = list.filter(item => item.english.toLowerCase() !== englishWord.toLowerCase());
             saveWordList(list);
             renderWordList();
+            
+            // Remove the definition from the offline dictionary and re-render reading pane
+            delete offlineDictionary[englishWord.toLowerCase()];
+            renderReadingPane(); // Re-render to remove has-definition class
         }
 
         function updateActivityButtonsState(wordCount) {
@@ -187,9 +205,14 @@ class InteractiveReader extends HTMLElement {
                     const cleanWord = part.trim().toLowerCase();
                     const span = document.createElement('span');
                     span.textContent = part;
-                    if (offlineDictionary[cleanWord]) {
+                    // Make all words clickable, not just those with definitions
+                    if (/\w/.test(cleanWord)) { // Check if part contains actual word characters
                         span.className = 'clickable-word';
                         span.dataset.english = cleanWord;
+                        // Add has-definition class only for words with existing definitions
+                        if (offlineDictionary[cleanWord]) {
+                            span.classList.add('has-definition');
+                        }
                     }
                     wordSpansForHighlighting.push({ element: span, start: charCounter, end: charCounter + part.length });
                     p.appendChild(span);
@@ -236,7 +259,7 @@ class InteractiveReader extends HTMLElement {
             const target = e.target;
             if (target.classList.contains('clickable-word')) {
                 const englishWord = target.dataset.english;
-                const thaiWord = offlineDictionary[englishWord];
+                const thaiWord = offlineDictionary[englishWord] || ''; // Use empty string if no definition
                 speak(englishWord);
                 displayPopup(target, englishWord, thaiWord, target);
             }
@@ -256,6 +279,9 @@ class InteractiveReader extends HTMLElement {
 
         function displayPopup(targetElement, englishWord, thaiWord, wordSpanEl = null) {
             const isInList = getWordList().some(item => item.english.toLowerCase() === englishWord.toLowerCase());
+            const hasDefinition = thaiWord && thaiWord.trim() !== '';
+            const placeholderText = hasDefinition ? '' : 'Enter Thai definition...';
+            
             popup.innerHTML = `<div id="popup-content">
             <div class="spaced-header">
                 <p style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
@@ -269,7 +295,7 @@ class InteractiveReader extends HTMLElement {
                 </p>
                 <button id="close-popup" class="remove-word-btn">&times;</button>
             </div>
-            <input id="thai-word-input" type="text" value="${thaiWord}" />
+            <input id="thai-word-input" type="text" value="${thaiWord || ''}" placeholder="${placeholderText}" />
             <button id="add-to-list-btn" class="button button-secondary">บันทึกคำ</button>
             <button id="remove-from-list-btn" class="button button-red"${isInList ? '' : ' style=\"display:none;\"'}>ลบคำ</button>
             <button id="play-from-here-btn" class="button button-primary">ฟังจากที่นี่</button>
