@@ -383,12 +383,23 @@ class InteractiveReader extends HTMLElement {
         function positionPopup(targetElement) {
             const rect = targetElement.getBoundingClientRect();
             const popupWidth = 200;
+            const popupHeight = 220; // Estimate, or use popup.offsetHeight after rendering
             const padding = 40;
-            let left = rect.left;
-            left = rect.left + (rect.width / 2) - (popupWidth / 2);
+            let left = rect.left + (rect.width / 2) - (popupWidth / 2);
             left = Math.max(padding, Math.min(left, window.innerWidth - popupWidth - padding));
+
+            // Default: show below the word
+            let top = rect.bottom + 10;
+            // If popup would overflow bottom, show above the word
+            if (top + popupHeight > window.innerHeight - padding) {
+                top = rect.top - popupHeight - 10;
+                // If above also overflows, clamp to padding
+                if (top < padding) {
+                    top = window.innerHeight - popupHeight - padding;
+                }
+            }
             popup.style.left = `${left}px`;
-            popup.style.top = `${rect.bottom + 10}px`;
+            popup.style.top = `${top}px`;
             popup.style.width = `${popupWidth}px`;
         }
 
