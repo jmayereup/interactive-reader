@@ -101,6 +101,7 @@
 }
 .has-definition {
     border-bottom: 1px dashed var(--secondary-light);
+    border-radius: 4px 4px 0px 0px;
 }
     .clickable-word:hover {
         background-color: var(--secondary-hover-dark);
@@ -199,7 +200,7 @@
     .w-full { width: 100%; }
     .h-full { height: 100%; }
     .max-h-45vh { max-height: 45vh; }
-    .max-h-70vh { max-height: 70vh; }
+    .max-h-100vh { max-height: 100vh; }
     .overflow-y-auto { overflow-y: auto; }
     .pr-2 { padding-right: 0.5rem; }
     .mt-4 { margin-top: 1rem; }
@@ -473,7 +474,7 @@
         <main>
             <div class="lg-col-span-2 card">
                 <div class="instructions text-center mb-6" style="color: var(--text-muted);">Click any underlined word to hear it, see its translation, and add it to your list.</div>
-                <div id="reading-pane" class="prose max-h-70vh overflow-y-auto pr-2"></div>
+                <div id="reading-pane" class="prose max-h-100vh overflow-y-auto pr-2"></div>
             </div>
 
             <div class="lg-col-span-1 card flex flex-col">
