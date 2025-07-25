@@ -214,13 +214,13 @@
     
     /* Typography */
     .main-title {
-        font-size: 180%; /* text-3xl */
+        font-size: 1.8em; /* text-3xl */
         font-weight: 700; /* font-bold */
         color: var(--text-color);
     }
-    .text-xl { font-size: 125%; }
-    .text-3xl { font-size: 185%; }
-    .text-4xl { font-size: 225%; }
+    .text-xl { font-size: 1.25em; }
+    .text-3xl { font-size: 1.85em; }
+    .text-4xl { font-size: 200em; }
     .font-bold { font-weight: 700; }
     .font-light { font-weight: 300; }
     .font-medium { font-weight: 500; }
@@ -438,7 +438,7 @@
     @media (min-width: 768px) { /* md: */
         .container-wrapper { padding: 2rem; }
         .card { padding: 2rem; }
-        .main-title { font-size: 300%; } /* md:text-5xl */
+        .main-title { font-size: 3em; line-height: 1em;} /* md:text-5xl */
     }
     @media (min-width: 1024px) { /* lg: */
         main { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -451,7 +451,7 @@
     <div id="main-content">
         <header>
             <div class="flex justify-center items-center mb-4 gap-4">
-                 <h1 class="main-title"></h1>
+                 <h2 class="main-title"></h2>
                  <button id="theme-toggle-btn">
                     <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                     <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
