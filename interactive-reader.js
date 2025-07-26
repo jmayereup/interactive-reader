@@ -18,7 +18,7 @@ class InteractiveReader extends HTMLElement {
             this.initialize();
         } catch (error) {
             console.error('Error loading interactive reader component:', error);
-            this.shadowRoot.innerHTML = `<p style="color: red;">Error: Could not load reader component template.</p>`;
+            this.shadowRoot.innerHTML = `<p style="color: red;">Error: Could not load reader component template. If you opened this page from a messaging app, please try copying the link into a regular browser like Chrome, Firefox, or Safari. หากคุณเปิดหน้านี้จากแอพส่งข้อความโปรดลองคัดลอกลิงก์ไปยังเบราว์เซอร์ปกติเช่น Chrome, Firefox หรือ Safari</p>`;
         }
     }
     
