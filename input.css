@@ -1,0 +1,472 @@
+@import "tailwindcss";
+
+/* Custom component styles */
+@layer components {
+  /* Theme variables */
+  :host {
+    display: block;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-size: 16px; /* Base font size to prevent inheritance issues */
+    line-height: 1.5;
+    /* Better style isolation */
+    all: initial;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    --background-light: #ffffff;
+    --text-light: #334155;
+    --muted-light: #64748b;
+    --card-background-light: #f8fafc;
+    --border-light: #e2e8f0;
+    --primary-light: #3b82f6;
+    --primary-hover-light: #2563eb;
+    --secondary-light: #10b981;
+    --secondary-hover-light: #059669;
+    --highlight-light: #fef08a;
+    --word-in-list-bg-light: #dcfce7;
+    --word-in-list-text-light: #166534;
+    --danger-light: #ef4444;
+    --danger-hover-light: #dc2626;
+
+    --background-dark: #111827;
+    --text-dark: #d1d5db;
+    --muted-dark: #9ca3af;
+    --card-background-dark: #1f2937;
+    --border-dark: #374151;
+    --primary-dark: #60a5fa;
+    --primary-hover-dark: #3b82f6;
+    --secondary-dark: #34d399;
+    --secondary-hover-dark: #10b981;
+    --highlight-dark: #facc15;
+    --word-in-list-bg-dark: #14532d;
+    --word-in-list-text-dark: #bbf7d0;
+    --danger-dark: #f87171;
+    --danger-hover-dark: #ef4444;
+
+    /* Default to light mode variables */
+    --bg: var(--background-light);
+    --text-color: var(--text-light);
+    --text-muted: var(--muted-light);
+    --card-bg: var(--card-background-light);
+    --border-color: var(--border-light);
+    --primary: var(--primary-light);
+    --primary-hover: var(--primary-hover-light);
+    --secondary: var(--secondary-light);
+    --secondary-hover: var(--secondary-hover-light);
+    --danger: var(--danger-light);
+    --danger-hover: var(--danger-hover-light);
+    --highlight-bg: var(--highlight-light);
+    --word-in-list-bg: var(--word-in-list-bg-light);
+    --word-in-list-text: var(--word-in-list-text-light);
+  }
+
+  /* Dark mode variables */
+  :host(.dark) {
+    --bg: var(--background-dark);
+    --text-color: var(--text-dark);
+    --text-muted: var(--muted-dark);
+    --card-bg: var(--card-background-dark);
+    --border-color: var(--border-dark);
+    --primary: var(--primary-dark);
+    --primary-hover: var(--primary-hover-dark);
+    --secondary: var(--secondary-dark);
+    --secondary-hover: var(--secondary-hover-dark);
+    --danger: var(--danger-dark);
+    --danger-hover: var(--danger-hover-dark);
+    --highlight-bg: var(--highlight-dark);
+    --word-in-list-bg: var(--word-in-list-bg-dark);
+    --word-in-list-text: var(--word-in-list-text-dark);
+  }
+
+  .container-wrapper {
+    background-color: var(--bg);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  /* Force Inter font for all text elements unless specifically overridden */
+  .container-wrapper * {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  }
+
+  /* Thai-specific text should use Sarabun with better fallbacks */
+  .container-wrapper [lang="th"],
+  .container-wrapper .thai-word,
+  .container-wrapper #thai-word-input,
+  .container-wrapper .card-back.thai,
+  .container-wrapper .quiz-option {
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+
+  .prose p {
+    line-height: 170%;
+    font-size: 1em;
+    color: var(--text-color);
+  }
+
+  .clickable-word {
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 4px;
+    padding: 2px 1px;
+  }
+
+  .has-definition {
+    border-bottom: 1px dashed var(--secondary-light);
+    border-radius: 4px 4px 0px 0px;
+  }
+
+  .clickable-word:hover {
+    background-color: var(--secondary-hover-dark);
+    color: white;
+  }
+
+  .word-in-list {
+    background-color: var(--word-in-list-bg);
+    color: var(--word-in-list-text);
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 1px 3px;
+  }
+
+  .speaking-highlight {
+    background-color: var(--highlight-bg);
+    color: #1f2937;
+  }
+
+  .word-list-item {
+    background-color: var(--bg);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+  }
+
+  .word-list-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .button {
+    @apply font-bold text-sm transition-all text-white border-0 cursor-pointer;
+  }
+
+  .button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .button-primary { 
+    background-color: var(--primary); 
+  }
+  .button-primary:hover:not(:disabled) { 
+    background-color: var(--primary-hover); 
+  }
+  .button-secondary { 
+    background-color: var(--secondary); 
+  }
+  .button-secondary:hover:not(:disabled) { 
+    background-color: var(--secondary-hover); 
+  }
+  .button-red { 
+    background-color: var(--danger); 
+  }
+  .button-red:hover:not(:disabled) { 
+    background-color: var(--danger-hover); 
+  }
+  .button-slate { 
+    @apply bg-slate-500 hover:bg-slate-600;
+  }
+
+  .control-btn {
+    @apply bg-gray-200 transition-colors border-0 cursor-pointer;
+  }
+  .control-btn:hover { 
+    @apply bg-gray-300;
+  }
+  
+  :host(.dark) .control-btn { 
+    @apply bg-gray-700;
+  }
+  :host(.dark) .control-btn:hover { 
+    @apply bg-gray-600;
+  }
+  .control-btn svg { 
+    @apply text-gray-800;
+  }
+  :host(.dark) .control-btn svg { 
+    @apply text-gray-200;
+  }
+
+  #thai-word-input {
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif !important;
+    width: 211px;
+    font-size: 1em;
+  }
+
+  /* Snackbar styling - Using Tailwind utilities where possible */
+  .snackbar-content {
+    @apply px-6 py-4 flex flex-col gap-3 max-w-md mx-auto;
+  }
+
+  .snackbar-header {
+    @apply flex justify-between items-center;
+  }
+
+  .snackbar-word {
+    @apply flex items-center gap-2 font-semibold text-lg;
+  }
+
+  .snackbar-input {
+    @apply w-full px-2 py-2 border border-gray-300 rounded text-sm;
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  .dark .snackbar-input {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+
+  .snackbar-buttons {
+    @apply flex gap-2 flex-wrap;
+  }
+
+  .snackbar-btn {
+    @apply px-3 py-2 rounded text-sm font-medium border-0 cursor-pointer transition-all flex-1 min-w-fit;
+  }
+
+  .snackbar-btn-primary {
+    @apply bg-blue-500 text-white hover:bg-blue-600;
+  }
+
+  .snackbar-btn-secondary {
+    @apply bg-gray-500 text-white hover:bg-gray-600;
+  }
+
+  .snackbar-btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600;
+  }
+
+  .snackbar-close {
+    @apply bg-transparent border-0 cursor-pointer p-1 rounded text-gray-500 transition-colors hover:text-gray-700;
+  }
+
+  .dark .snackbar-close {
+    @apply text-gray-400 hover:text-gray-200;
+  }
+
+  #activity-modal { 
+    background-color: var(--bg); 
+  }
+
+  #activity-content {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+  }
+
+  #word-count-selector select {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg);
+    color: var(--text-color);
+  }
+
+  /* Quiz Styles - Using Tailwind where possible */
+  .quiz-container {
+    @apply w-full max-w-2xl;
+  }
+
+  .quiz-question {
+    @apply text-3xl font-bold my-6;
+    color: var(--text-color);
+  }
+
+  .quiz-options-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .quiz-option {
+    @apply cursor-pointer transition-all text-lg border rounded-lg p-4;
+    background-color: var(--bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  .quiz-option:hover:not(:disabled) {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .quiz-option:disabled { 
+    @apply cursor-not-allowed;
+  }
+
+  .quiz-option.correct {
+    background-color: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+  }
+
+  .quiz-option.incorrect {
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    animation: shake 0.5s;
+  }
+
+  /* Matching Game Styles */
+  .matching-container {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .matching-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .matching-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .matching-item {
+    background-color: var(--bg);
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .matching-item:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  .matching-item.selected {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .matching-item.matched {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    color: white;
+    cursor: default;
+  }
+
+  .matching-item.matched:hover {
+    transform: none;
+  }
+
+  .matching-item.incorrect {
+    background-color: var(--danger);
+    border-color: var(--danger);
+    color: white;
+    animation: shake 0.5s;
+  }
+
+  .thai-word {
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 1.2em;
+  }
+
+  .english-word {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 1em;
+  }
+
+  /* Memory Game Styles - Using Tailwind where possible */
+  .memory-grid {
+    @apply flex flex-wrap justify-center gap-4 w-full max-w-4xl;
+    perspective: 1000px;
+  }
+
+  .memory-card {
+    @apply cursor-pointer relative rounded-lg;
+    flex: 0 0 120px;
+    height: 150px;
+    background-color: transparent;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+  }
+
+  .memory-card.flipped, .memory-card.matched {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    @apply absolute w-full h-full rounded-lg flex items-center justify-center text-center text-lg font-semibold border shadow-md;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-color: var(--border-color);
+  }
+
+  .card-front {
+    background: var(--card-bg);
+    color: var(--primary);
+  }
+
+  .card-front-icon {
+    @apply w-1/2 h-1/2 opacity-50;
+  }
+
+  .card-back {
+    background-color: var(--bg);
+    color: var(--text-color);
+    transform: rotateY(180deg);
+  }
+
+  .card-back.thai {
+    font-family: 'Sarabun', 'Noto Sans Thai', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  .memory-card.matched .card-back {
+    background-color: var(--secondary);
+    color: white;
+    border-color: var(--secondary-hover);
+  }
+
+  .memory-card.mismatched {
+    animation: shake 0.5s;
+  }
+
+  .memory-card.mismatched .card-back {
+    @apply bg-red-100 border-red-500;
+  }
+
+  :host(.dark) .memory-card.mismatched .card-back {
+    @apply bg-red-900 border-red-400;
+  }
+
+  .remove-word-btn { 
+    @apply bg-transparent border-0 text-red-500 cursor-pointer p-2 rounded transition-all hover:text-red-600 hover:bg-red-50;
+  }
+  .remove-word-btn svg { 
+    @apply w-5 h-5;
+  }
+
+  /* Animations */
+  @keyframes shake { 
+    0%, 100% { transform: translateX(0); } 
+    25% { transform: translateX(-5px); } 
+    75% { transform: translateX(5px); } 
+  }
+
+  /* Custom utilities that can't be replaced easily */
+  .spaced-header {
+    @apply flex justify-between items-center mb-4;
+  }
+  
+  .max-h-45vh { 
+    max-height: 45vh; 
+  }
+  .max-h-100vh { 
+    max-height: 100vh; 
+  }
+}

@@ -1,10 +1,32 @@
+# Interactive Reader Custom Element
+
 This is a custom element for use on blogs to allow preformatted text to be displayed in a reading tool.
 It has pop-up translations, text-to-speech, and a user wordlist saved to local storage.
 The wordbank can easily be generated with contextual translations using an AI of your choice.
 
+## Development Setup
+
+This project uses Tailwind CSS v4 with the CLI for styling. To work on the project:
+
+1. Install dependencies: `npm install`
+2. For development, run the CSS watcher: `npm run watch-css`
+3. To build CSS for production: `npm run build-css`
+
+Custom styles are defined in `input.css` and compiled to `interactive-reader.css`. The CSS is automatically injected into the Shadow DOM at runtime.
+
+## Architecture
+
+- **Shadow DOM**: The component uses Shadow DOM for style encapsulation
+- **CSS Injection**: Tailwind CSS is fetched and injected into the Shadow DOM at runtime
+- **Modular**: Template and styles are loaded as separate files for maintainability
+
+## Usage
+
 To use it you need to include the interactive-reader.js and reader-template.html files in an accessible place on your web server. 
 Then import it into your header or footer using code injection:
+```html
 <script type="module" src="/path/to/interactive-reader.js"></script>
+```
 
 In an HTML block, format your text as follows:
 

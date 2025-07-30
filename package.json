@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.11",
+    "tailwindcss": "^4.1.11"
+  },
+  "scripts": {
+    "build-css": "tailwindcss -i input.css -o interactive-reader.css",
+    "watch-css": "tailwindcss -i input.css -o interactive-reader.css --watch",
+    "build": "npm run build-css && mkdir -p dist && cp index.html interactive-reader.css interactive-reader.js reader-template.html dist/",
+    "clean": "rm -rf dist"
+  }
+}
